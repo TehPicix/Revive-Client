@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:;" />
+  <title>Revive Launcher</title>
+  <style>
+    :root {
+      --accent:#ff69be; --accent2:#c084fc;
+      --bg:#0e0a16; --bg2:#140d20;
+      --panel:rgba(48,34,64,.46); --panel2:rgba(48,34,64,.62);
+      --text:#f3e9ff; --muted:#bfa6d6;
+      --border:rgba(220,150,205,.18); --border2:rgba(220,150,205,.30);
+      --ok:#79e6c2; --err:#ff7aa2;
+      --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin:0; height:100vh; overflow:hidden; color:var(--text);
+      font: 14px/1.5 system-ui, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+    }
+    /* animated aurora behind everything */
+    .aurora-bg {
+      position: fixed; inset:0; z-index:0; pointer-events:none;
+      background:
+        radial-gradient(560px 380px at 10% 6%,  rgba(255,105,190,.24), transparent 60%),
+        radial-gradient(600px 420px at 92% 24%, rgba(192,132,252,.24), transparent 60%),
+        radial-gradient(520px 340px at 60% 118%, rgba(240,171,252,.18), transparent 60%),
+        var(--bg);
+      animation: drift 16s ease-in-out infinite alternate;
+    }
+    @keyframes drift {
+      0%   { transform: translate3d(-2%,-1%,0) scale(1.06); }
+      100% { transform: translate3d(3%,2%,0) scale(1.13); }
+    }
+
+    .app { position:relative; z-index:1; display:flex; flex-direction:column; height:100vh; }
+    header {
+      height:46px; display:flex; align-items:center; justify-content:space-between;
+      padding:0 22px; border-bottom:1px solid var(--border);
+      backdrop-filter: blur(8px); background: rgba(14,10,22,.35);
+    }
+    header .eyebrow { font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+    header .who { color:var(--muted); font-size:13px; }
+    header .who b { color:var(--text); font-weight:600; }
+
+    main { flex:1; display:flex; min-height:0; }
+    .left {
+      width:336px; padding:22px; overflow-y:auto;
+      border-right:1px solid var(--border);
+      backdrop-filter: blur(10px); background: rgba(20,13,32,.30);
+      display:flex; flex-direction:column; gap:16px;
+    }
+    .right { flex:1; display:flex; flex-direction:column; min-width:0; }
+
+    /* ---- hero / mascot ---- */
+    .hero { display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; padding:6px 0 2px; }
+    .hero .mascot {
+      width:132px; height:auto;
+      filter: drop-shadow(0 12px 26px rgba(255,105,190,.4));
+      animation: bob 3.6s ease-in-out infinite;
+    }
+    @keyframes bob { 50% { transform: translateY(-6px); } }
+    .wordmark { font-size:24px; font-weight:800; letter-spacing:.5px; margin-top:4px; }
+    .wordmark b { font-weight:800; background:linear-gradient(100deg,var(--accent),var(--accent2));
+      -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .ver { font-size:11px; color:var(--muted); letter-spacing:.02em; }
+
+    /* ---- cards, inputs, buttons ---- */
+    .card {
+      background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px;
+      backdrop-filter: blur(14px); box-shadow: 0 18px 40px -24px rgba(0,0,0,.7);
+    }
+    h2 { font-size:15px; margin:0 0 10px; }
+    label { display:block; font-size:12px; color:var(--muted); margin:12px 0 4px; }
+    input, select {
+      width:100%; padding:10px 11px; color:var(--text);
+      background:rgba(12,8,20,.55); border:1px solid var(--border2); border-radius:9px; font-size:14px;
+    }
+    input:focus, select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(255,105,190,.22); }
+    button {
+      cursor:pointer; border:none; border-radius:9px; font-size:14px; font-weight:600;
+      padding:10px 14px; color:#fff; background:var(--accent); transition:filter .15s, transform .05s;
+    }
+    button:hover { filter:brightness(1.08); }
+    button:active { transform:translateY(1px); }
+    button.secondary { background:var(--panel2); border:1px solid var(--border2); color:var(--text); }
+    button:disabled { opacity:.5; cursor:default; }
+    .row { display:flex; gap:8px; } .row > * { flex:1; }
+
+    .play {
+      width:100%; padding:15px; font-size:17px; font-weight:700; margin-top:4px; letter-spacing:.02em;
+      display:flex; align-items:center; justify-content:center; gap:9px;
+      background:linear-gradient(180deg, var(--accent), var(--accent2));
+      box-shadow: 0 12px 30px -10px var(--accent);
+      animation: glow 3.2s ease-in-out infinite;
+    }
+    @keyframes glow {
+      0%,100% { box-shadow: 0 12px 30px -12px var(--accent); }
+      50%     { box-shadow: 0 16px 42px -8px var(--accent), 0 0 0 1px rgba(192,132,252,.4); }
+    }
+
+    .chips { display:flex; gap:7px; flex-wrap:wrap; margin-top:12px; }
+    .chip { font-size:11px; color:var(--muted); border:1px solid var(--border2); border-radius:999px; padding:4px 10px; }
+    .chip b { color:var(--text); font-weight:600; }
+    .hint { color:var(--muted); font-size:12px; margin-top:10px; }
+
+    .tabs { display:flex; gap:6px; margin-bottom:12px; }
+    .tabs button { flex:1; background:rgba(12,8,20,.5); color:var(--muted); border:1px solid var(--border2); }
+    .tabs button.active { background:linear-gradient(180deg,var(--accent),var(--accent2)); color:#fff; border-color:transparent; }
+    .err { color:var(--err); font-size:13px; margin-top:10px; min-height:18px; }
+
+    details { border-top:1px solid var(--border); padding-top:12px; margin-top:2px; }
+    summary { cursor:pointer; color:var(--muted); font-size:13px; }
+    summary:hover { color:var(--text); }
+
+    /* ---- mods panel ---- */
+    .modslist { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+    .modrow {
+      display:flex; align-items:center; gap:8px; padding:7px 10px;
+      background:rgba(12,8,20,.5); border:1px solid var(--border2); border-radius:9px; font-size:12.5px;
+    }
+    .modrow .mname { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .modrow.off .mname { color:var(--muted); text-decoration:line-through; }
+    .modrow .msize { color:var(--muted); font-size:11px; flex:none; }
+    .modrow .mtag {
+      flex:none; font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+      color:var(--muted); border:1px solid var(--border2); border-radius:999px; padding:2px 7px;
+    }
+    .modrow input[type=checkbox] { width:auto; accent-color:var(--accent); cursor:pointer; flex:none; }
+    .modrow .mdel {
+      flex:none; background:none; border:none; color:var(--muted); font-size:15px; line-height:1;
+      padding:2px 5px; border-radius:6px;
+    }
+    .modrow .mdel:hover { color:var(--err); background:rgba(255,122,162,.12); }
+    .modsempty { color:var(--muted); font-size:12px; padding:6px 2px; }
+
+    /* ---- console + status ---- */
+    .console {
+      flex:1; margin:0; padding:16px 22px; overflow-y:auto;
+      background: rgba(8,5,14,.5); backdrop-filter: blur(4px);
+      font: 12px/1.55 var(--mono); color:#d7c8ea;
+      white-space:pre-wrap; word-break:break-word;
+    }
+    .status {
+      padding:11px 22px; border-top:1px solid var(--border); font:12.5px/1.4 var(--mono);
+      display:flex; align-items:center; gap:9px; background: rgba(8,5,14,.5);
+    }
+    .status::before { content:""; width:8px; height:8px; border-radius:50%; background:currentColor;
+      box-shadow:0 0 10px currentColor; flex:none; }
+    .status.ok { color:var(--ok); } .status.error { color:var(--err); } .status.info { color:var(--muted); }
+
+    /* ---- color editor ---- */
+    .colorrow { display:flex; align-items:center; gap:8px; }
+    .swatchbig { width:40px; height:34px; border-radius:9px; border:1px solid var(--border2);
+      overflow:hidden; position:relative; cursor:pointer; flex:none; padding:0; margin:0;
+      display:block; }
+    .swatchbig input[type=color] { position:absolute; inset:-6px; width:calc(100% + 12px);
+      height:calc(100% + 12px); border:none; background:none; cursor:pointer; padding:0; }
+    .presets { display:flex; gap:6px; margin-left:2px; }
+    .preset { width:24px; height:24px; border-radius:7px; border:1px solid rgba(255,255,255,.18);
+      padding:0; cursor:pointer; }
+    .preset:hover { transform:translateY(-1px); }
+
+    a { color:var(--accent); cursor:pointer; }
+    ::-webkit-scrollbar { width:9px; } ::-webkit-scrollbar-thumb { background:rgba(220,150,205,.25); border-radius:9px; }
+
+    @media (prefers-reduced-motion: reduce) { * { animation:none !important; } }
+  </style>
+</head>
+<body>
+  <div class="aurora-bg"></div>
+
+  <!-- reusable 1-up mascot: green mushroom eating a golden apple -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="lup" viewBox="0 0 180 118">
+      <text x="2" y="16" font-family="ui-monospace, monospace" font-size="16" font-weight="700" fill="#8bff76" stroke="#123f12" stroke-width="1.2">+1</text>
+      <!-- end-crystal glow -->
+      <circle cx="136" cy="32" r="16" fill="#ff8fe6" opacity=".2"/>
+      <!-- 1-up mushroom -->
+      <rect x="64" y="58" width="52" height="44" rx="14" fill="#f6e3c6" stroke="#1f6e26" stroke-width="3"/>
+      <path d="M52 62 C52 24 80 18 90 18 C100 18 128 24 128 62 Z" fill="#3fb43f" stroke="#1f6e26" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="70" cy="40" r="7" fill="#fff"/>
+      <circle cx="107" cy="36" r="6" fill="#fff"/>
+      <circle cx="90" cy="52" r="5" fill="#fff"/>
+      <rect x="77" y="70" width="6" height="14" rx="3" fill="#20232a"/>
+      <rect x="99" y="70" width="6" height="14" rx="3" fill="#20232a"/>
+      <path d="M83 88 Q90 95 97 88" fill="none" stroke="#20232a" stroke-width="3" stroke-linecap="round"/>
+      <!-- raised arms (victory) -->
+      <path d="M66 86 C52 83 46 66 46 50" fill="none" stroke="#1f6e26" stroke-width="11" stroke-linecap="round"/>
+      <path d="M114 86 C128 83 134 66 134 50" fill="none" stroke="#1f6e26" stroke-width="11" stroke-linecap="round"/>
+      <path d="M66 86 C52 83 46 66 46 50" fill="none" stroke="#f6e3c6" stroke-width="7" stroke-linecap="round"/>
+      <path d="M114 86 C128 83 134 66 134 50" fill="none" stroke="#f6e3c6" stroke-width="7" stroke-linecap="round"/>
+      <!-- Totem of Undying (raised, left): amber body, green eyes, horns, arms out -->
+      <rect x="23" y="36" width="10" height="6.5" rx="1.5" fill="#e2912f" stroke="#8a4a1e" stroke-width="1.6"/>
+      <rect x="51" y="36" width="10" height="6.5" rx="1.5" fill="#e2912f" stroke="#8a4a1e" stroke-width="1.6"/>
+      <path d="M33 37 L51 37 L48 49 L36 49 Z" fill="#e2912f" stroke="#8a4a1e" stroke-width="1.8" stroke-linejoin="round"/>
+      <rect x="31" y="21" width="22" height="17" rx="3" fill="#ecc37a" stroke="#8a4a1e" stroke-width="1.8"/>
+      <rect x="35" y="29" width="4.5" height="5" rx="1" fill="#6cbf3f" stroke="#3f7a25" stroke-width="1"/>
+      <rect x="44.5" y="29" width="4.5" height="5" rx="1" fill="#6cbf3f" stroke="#3f7a25" stroke-width="1"/>
+      <rect x="34" y="25" width="4" height="2.5" rx="1" fill="#fff" opacity=".6"/>
+      <rect x="39" y="40" width="6" height="6" rx="1" fill="#f3ecd8" stroke="#8a4a1e" stroke-width="1.4"/>
+      <!-- End Crystal (raised, right) -->
+      <path d="M136 18 L150 32 L136 46 L122 32 Z" fill="#f3a6e8" stroke="#b25fae" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M136 18 L143 32 L136 39 L129 32 Z" fill="#ffdaf6" opacity=".85"/>
+      <rect x="132.5" y="28.5" width="7" height="7" rx="1.2" fill="#c04fb0"/>
+      <rect x="134.5" y="30.5" width="3" height="3" fill="#ffd24a"/>
+      <!-- hands gripping the items -->
+      <circle cx="44" cy="50" r="7" fill="#f6e3c6" stroke="#1f6e26" stroke-width="3"/>
+      <circle cx="134" cy="50" r="7" fill="#f6e3c6" stroke="#1f6e26" stroke-width="3"/>
+    </symbol>
+  </svg>
+
+  <div class="app">
+    <header>
+      <div class="eyebrow">Launcher</div>
+      <div class="who" id="who"></div>
+    </header>
+
+    <main>
+      <div class="left">
+        <div class="hero">
+          <svg class="mascot" viewBox="0 0 150 108"><use href="#lup"/></svg>
+          <div class="wordmark">Revive <b>Launcher</b></div>
+          <div class="ver">Minecraft 1.21.11 &middot; Fabric 0.18.4</div>
+        </div>
+
+        <!-- Signed-out view -->
+        <div id="authView" class="card">
+          <div class="tabs">
+            <button id="tabLogin" class="active">Log in</button>
+            <button id="tabRegister">Create account</button>
+          </div>
+          <label>Username</label>
+          <input id="username" autocomplete="username" placeholder="Anonymous" />
+          <label>Password</label>
+          <input id="password" type="password" autocomplete="current-password" />
+          <div class="err" id="authError"></div>
+          <button id="authSubmit" style="width:100%;margin-top:12px;">Log in</button>
+          <div class="hint">Your Revive account — separate from your Minecraft account.</div>
+        </div>
+
+        <!-- Signed-in view -->
+        <div id="playView" style="display:none;">
+          <div class="card">
+            <h2>Ready to play</h2>
+            <div class="hint" id="playHint">Signed in. Press play to sign in to Minecraft and launch.</div>
+            <button class="play" id="playBtn">&#9654;&nbsp; Play</button>
+            <button class="secondary" id="logoutBtn" style="width:100%;margin-top:10px;">Log out</button>
+            <div class="chips"><span class="chip"><b>Fabric</b> 0.18.4</span><span class="chip"><b>6</b> mods</span></div>
+          </div>
+
+          <details id="modsPanel">
+            <summary>Your mods</summary>
+            <div class="hint" style="margin-top:8px;">
+              Add your own Fabric mods for Minecraft 1.21.11 (Litematica, etc). Remember any
+              libraries a mod needs — e.g. Litematica also needs MaLiLib. Mods marked
+              <span class="mtag" style="border:1px solid var(--border2);border-radius:999px;padding:1px 6px;font-size:10px;">client</span>
+              are installed and updated automatically.
+            </div>
+            <div class="modslist" id="modsList"></div>
+            <button class="secondary" id="modsAddBtn" style="width:100%;margin-top:10px;">+ Add mods&hellip;</button>
+          </details>
+
+          <details>
+            <summary>Settings</summary>
+            <div class="row">
+              <div><label>Max RAM</label><input id="setMaxMem" /></div>
+              <div><label>Min RAM</label><input id="setMinMem" /></div>
+            </div>
+
+            <label>Theme colors</label>
+            <div class="colorrow">
+              <label class="swatchbig" title="Main color"><input type="color" id="setAccent" /></label>
+              <label class="swatchbig" title="Secondary color"><input type="color" id="setAccent2" /></label>
+              <div class="presets" id="presets">
+                <button type="button" class="preset" data-a="#ff69be" data-b="#c084fc" style="background:linear-gradient(120deg,#ff69be,#c084fc)" title="Pink (default)"></button>
+                <button type="button" class="preset" data-a="#22d3ee" data-b="#6366f1" style="background:linear-gradient(120deg,#22d3ee,#6366f1)" title="Ice"></button>
+                <button type="button" class="preset" data-a="#34d399" data-b="#10b981" style="background:linear-gradient(120deg,#34d399,#10b981)" title="Mint"></button>
+                <button type="button" class="preset" data-a="#ff8f3f" data-b="#ff5a1f" style="background:linear-gradient(120deg,#ff8f3f,#ff5a1f)" title="Ember"></button>
+                <button type="button" class="preset" data-a="#a78bfa" data-b="#7c3aed" style="background:linear-gradient(120deg,#a78bfa,#7c3aed)" title="Violet"></button>
+              </div>
+            </div>
+            <button type="button" class="secondary" id="resetColors" style="width:100%;margin-top:8px;font-size:12px;padding:8px;">Reset to pink</button>
+
+            <button class="secondary" id="saveSettings" style="width:100%;margin-top:12px;">Save settings</button>
+          </details>
+        </div>
+      </div>
+
+      <div class="right">
+        <pre class="console" id="console"></pre>
+        <div class="status info" id="status">Idle.</div>
+      </div>
+    </main>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>

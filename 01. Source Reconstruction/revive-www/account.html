@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revive — Account</title>
+<meta name="description" content="Sign in to download the Revive launcher.">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#ff69be">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent:#ff69be; --accent2:#c084fc; --accent3:#f0abfc;
+    --bg:#0e0a16; --bg2:#140d20;
+    --panel:rgba(48,34,64,.46); --panel2:rgba(48,34,64,.62);
+    --text:#f3e9ff; --muted:#bfa6d6;
+    --border:rgba(220,150,205,.18); --border2:rgba(220,150,205,.30);
+    --ok:#79e6c2; --gold:#ecc37a; --err:#ff8b8b;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;
+    line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;
+    display:flex;align-items:center;justify-content:center;padding:24px;overflow-x:hidden}
+  ::selection{background:var(--accent);color:#fff}
+  .aurora{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(560px 380px at 12% 8%, rgba(255,105,190,.20), transparent 60%),
+      radial-gradient(600px 420px at 88% 22%, rgba(192,132,252,.20), transparent 60%),
+      radial-gradient(520px 340px at 60% 108%, rgba(240,171,252,.15), transparent 60%),
+      var(--bg)}
+  .card{position:relative;z-index:1;width:100%;max-width:420px;
+    background:var(--panel);border:1px solid var(--border);border-radius:24px;
+    padding:40px 34px;backdrop-filter:blur(14px);
+    box-shadow:0 30px 70px -30px rgba(0,0,0,.8)}
+  .brand{display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:8px}
+  .brand svg{width:46px;height:auto;filter:drop-shadow(0 6px 16px rgba(255,105,190,.4))}
+  .brand-name{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px}
+  .sub{text-align:center;color:var(--muted);font-size:14px;margin-bottom:28px}
+  h1{font-family:'Fredoka',sans-serif;font-weight:600;font-size:22px;text-align:center;margin-bottom:22px}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:500}
+  input{width:100%;padding:13px 15px;border-radius:11px;border:1px solid var(--border2);
+    background:rgba(8,5,14,.5);color:var(--text);font-size:15px;font-family:inherit;margin-bottom:16px;
+    transition:border-color .15s}
+  input:focus{outline:none;border-color:var(--accent)}
+  .btn{width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;transition:.18s;color:#fff;
+    background:linear-gradient(180deg,var(--accent),var(--accent2));
+    box-shadow:0 14px 34px -14px var(--accent)}
+  .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+  .btn.secondary{background:var(--panel2);border:1px solid var(--border2);
+    box-shadow:none;color:var(--text);margin-top:10px}
+  .toggle{text-align:center;font-size:14px;color:var(--muted);margin-top:20px}
+  .toggle a{color:var(--accent3);cursor:pointer;text-decoration:none;font-weight:600}
+  .toggle a:hover{text-decoration:underline}
+  .msg{padding:12px 14px;border-radius:11px;font-size:14px;margin-bottom:18px;display:none;line-height:1.5}
+  .msg.show{display:block}
+  .msg.error{background:rgba(255,139,139,.12);border:1px solid rgba(255,139,139,.3);color:var(--err)}
+  .msg.info{background:rgba(192,132,252,.12);border:1px solid var(--border2);color:var(--accent3)}
+  .msg.ok{background:rgba(121,230,194,.1);border:1px solid rgba(121,230,194,.3);color:var(--ok)}
+  /* authorized / pending states */
+  .state{text-align:center}
+  .state .big-ico{width:76px;height:auto;margin:0 auto 18px;display:block;
+    filter:drop-shadow(0 10px 26px rgba(255,105,190,.4))}
+  .state h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:22px;margin-bottom:10px}
+  .state p{color:var(--muted);font-size:15px;margin-bottom:24px}
+  .who{font-size:13px;color:var(--muted);text-align:center;margin-top:18px}
+  .who b{color:var(--text)}
+  .dlbtns{display:flex;flex-direction:column;gap:12px;margin-bottom:8px}
+  .dlbtn{display:flex;align-items:center;gap:12px;justify-content:center;text-decoration:none;
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;padding:15px;border-radius:13px;transition:.18s;
+    width:100%;border:none;cursor:pointer;text-align:center}
+  .dlbtn svg{width:22px;height:22px;flex:none}
+  .dlbtn.win{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;
+    box-shadow:0 14px 34px -14px var(--accent)}
+  .dlbtn.win svg{fill:#fff}
+  .dlbtn.win:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .dlbtn.lin{background:var(--panel2);border:1px solid var(--border2);color:var(--text)}
+  .dlbtn.lin svg{fill:var(--text)}
+  .dlbtn.lin:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .notice{background:rgba(236,195,122,.08);border:1px solid rgba(236,195,122,.3);color:var(--text);
+    border-radius:13px;padding:14px 16px;font-size:15px;line-height:1.5;margin-bottom:10px}
+  .state p.small{font-size:13px;margin-bottom:20px}
+  .dlbtn.discord{background:#5865F2;color:#fff;box-shadow:0 14px 34px -14px #5865F2}
+  .dlbtn.discord svg{fill:#fff}
+  .dlbtn.discord:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .pending-badge{display:inline-block;font-size:12px;font-weight:600;color:var(--gold);
+    background:rgba(236,195,122,.1);border:1px solid rgba(236,195,122,.3);
+    padding:5px 14px;border-radius:999px;margin-bottom:18px}
+  .linkrow{text-align:center;margin-top:16px}
+  .linkrow a{color:var(--muted);font-size:13px;text-decoration:none}
+  .linkrow a:hover{color:var(--text)}
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);
+    border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .hidden{display:none!important}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="lup" viewBox="0 0 180 118">
+    <text x="2" y="16" font-family="ui-monospace, monospace" font-size="16" font-weight="700" fill="#8bff76" stroke="#123f12" stroke-width="1.2">+1</text>
+    <circle cx="136" cy="32" r="16" fill="#ff8fe6" opacity=".2"/>
+    <rect x="64" y="58" width="52" height="44" rx="14" fill="#f6e3c6" stroke="#1f6e26" stroke-width="3"/>
+    <path d="M52 62 C52 24 80 18 90 18 C100 18 128 24 128 62 Z" fill="#3fb43f" stroke="#1f6e26" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="70" cy="40" r="7" fill="#fff"/><circle cx="107" cy="36" r="6" fill="#fff"/><circle cx="90" cy="52" r="5" fill="#fff"/>
+    <rect x="77" y="70" width="6" height="14" rx="3" fill="#20232a"/><rect x="99" y="70" width="6" height="14" rx="3" fill="#20232a"/>
+    <path d="M83 88 Q90 95 97 88" fill="none" stroke="#20232a" stroke-width="3" stroke-linecap="round"/>
+    <path d="M66 86 C52 83 46 66 46 50" fill="none" stroke="#1f6e26" stroke-width="11" stroke-linecap="round"/>
+    <path d="M114 86 C128 83 134 66 134 50" fill="none" stroke="#1f6e26" stroke-width="11" stroke-linecap="round"/>
+    <path d="M66 86 C52 83 46 66 46 50" fill="none" stroke="#f6e3c6" stroke-width="7" stroke-linecap="round"/>
+    <path d="M114 86 C128 83 134 66 134 50" fill="none" stroke="#f6e3c6" stroke-width="7" stroke-linecap="round"/>
+    <rect x="23" y="36" width="10" height="6.5" rx="1.5" fill="#e2912f" stroke="#8a4a1e" stroke-width="1.6"/>
+    <rect x="51" y="36" width="10" height="6.5" rx="1.5" fill="#e2912f" stroke="#8a4a1e" stroke-width="1.6"/>
+    <path d="M33 37 L51 37 L48 49 L36 49 Z" fill="#e2912f" stroke="#8a4a1e" stroke-width="1.8" stroke-linejoin="round"/>
+    <rect x="31" y="21" width="22" height="17" rx="3" fill="#ecc37a" stroke="#8a4a1e" stroke-width="1.8"/>
+    <rect x="35" y="29" width="4.5" height="5" rx="1" fill="#6cbf3f" stroke="#3f7a25" stroke-width="1"/>
+    <rect x="44.5" y="29" width="4.5" height="5" rx="1" fill="#6cbf3f" stroke="#3f7a25" stroke-width="1"/>
+    <rect x="34" y="25" width="4" height="2.5" rx="1" fill="#fff" opacity=".6"/>
+    <rect x="39" y="40" width="6" height="6" rx="1" fill="#f3ecd8" stroke="#8a4a1e" stroke-width="1.4"/>
+    <path d="M136 18 L150 32 L136 46 L122 32 Z" fill="#f3a6e8" stroke="#b25fae" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M136 18 L143 32 L136 39 L129 32 Z" fill="#ffdaf6" opacity=".85"/>
+    <rect x="132.5" y="28.5" width="7" height="7" rx="1.2" fill="#c04fb0"/><rect x="134.5" y="30.5" width="3" height="3" fill="#ffd24a"/>
+    <circle cx="44" cy="50" r="7" fill="#f6e3c6" stroke="#1f6e26" stroke-width="3"/>
+    <circle cx="134" cy="50" r="7" fill="#f6e3c6" stroke="#1f6e26" stroke-width="3"/>
+  </symbol>
+</svg>
+
+<div class="card">
+  <div class="brand"><svg viewBox="0 0 150 108"><use href="#lup"/></svg><span class="brand-name">Revive</span></div>
+
+  <!-- LOADING (checking existing session) -->
+  <div id="view-loading" class="state">
+    <p class="sub" style="margin:20px 0 4px"><span class="spinner"></span> &nbsp;Loading…</p>
+  </div>
+
+  <!-- AUTH FORM (login / signup) -->
+  <div id="view-auth" class="hidden">
+    <p class="sub">Sign in to download the launcher.</p>
+    <h1 id="form-title">Log in</h1>
+    <div id="msg" class="msg"></div>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="email" placeholder="you@example.com">
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="••••••••">
+    <button id="submit-btn" class="btn">Log in</button>
+    <div class="toggle" id="toggle-line">
+      New here? <a id="toggle-link">Create an account</a>
+    </div>
+  </div>
+
+  <!-- PENDING (logged in, not authorized) -->
+  <div id="view-pending" class="state hidden">
+    <svg class="big-ico" viewBox="0 0 150 108"><use href="#lup"/></svg>
+    <span class="pending-badge">Pending approval</span>
+    <h2>Waiting for approval</h2>
+    <div class="notice">Please wait for an admin to approve your access, or reach out to us on Discord.</div>
+    <p class="small">This page unlocks automatically once you're approved.</p>
+    <div id="pending-note" class="msg"></div>
+    <!-- Replace "insert discord link here" with your Discord invite, e.g. https://discord.gg/xxxxxxx -->
+    <a href="insert discord link here" target="_blank" rel="noopener" class="dlbtn discord">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.32 4.37A19.8 19.8 0 0 0 15.4 2.8a13.7 13.7 0 0 0-.63 1.3 18.4 18.4 0 0 0-5.53 0 12.6 12.6 0 0 0-.64-1.3 19.7 19.7 0 0 0-4.93 1.53C.53 9.05-.32 13.6.1 18.1a19.9 19.9 0 0 0 6.07 3.07c.49-.67.93-1.38 1.3-2.12a12.9 12.9 0 0 1-2.04-.98c.17-.12.34-.25.5-.38a14.2 14.2 0 0 0 12.14 0c.16.13.33.26.5.38-.65.39-1.33.71-2.05.98.38.74.81 1.45 1.3 2.12a19.8 19.8 0 0 0 6.08-3.07c.5-5.22-.84-9.73-3.58-13.73zM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42s.95-2.42 2.16-2.42 2.18 1.1 2.16 2.42c0 1.33-.95 2.42-2.16 2.42zm7.97 0c-1.18 0-2.15-1.09-2.15-2.42s.95-2.42 2.15-2.42 2.18 1.1 2.16 2.42c0 1.33-.94 2.42-2.16 2.42z"/></svg>
+      Join our Discord
+    </a>
+    <div class="who">Signed in as <b id="pending-email"></b></div>
+    <div class="linkrow"><a id="signout-pending">Sign out</a></div>
+  </div>
+
+  <!-- AUTHORIZED (logged in + approved) -->
+  <div id="view-download" class="state hidden">
+    <svg class="big-ico" viewBox="0 0 150 108"><use href="#lup"/></svg>
+    <h2>You're in. 🍄</h2>
+    <p>Access granted. Grab the launcher for your platform.</p>
+    <div class="dlbtns">
+      <button class="dlbtn win" data-key="windows">
+        <svg viewBox="0 0 88 88"><path d="M0 12.4 35.7 7.5v34.4H0zM40 6.9 87.9 0v41.8H40zM0 46.1h35.7v34.4L0 75.6zM40 46.1h47.9V88L40 81.1z"/></svg>
+        Download for Windows
+      </button>
+      <button class="dlbtn lin" data-key="linux">
+        <svg viewBox="0 0 24 24"><path d="M12 2C9.5 2 8 4 8 6c0 1.2.4 2.1.9 2.9-.6.5-1.2 1-1.7 1.8-1.3 1.9-2.5 4.4-3 6.3-.3 1.1-.2 2.1.4 2.8.5.7 1.4 1 2.3.9.8 0 1.6-.3 2.4-.6.9-.3 1.7-.4 2.5-.4s1.6.1 2.5.4c.8.3 1.6.6 2.4.6.9.1 1.8-.2 2.3-.9.6-.7.7-1.7.4-2.8-.5-1.9-1.7-4.4-3-6.3-.5-.8-1.1-1.3-1.7-1.8.5-.8.9-1.7.9-2.9 0-2-1.5-4-4-4z"/></svg>
+        Download for Linux
+      </button>
+    </div>
+    <div id="dl-status" class="msg" style="margin-top:14px"></div>
+    <div class="who">Signed in as <b id="dl-email"></b></div>
+    <div class="linkrow"><a id="signout-dl">Sign out</a></div>
+  </div>
+
+  <div class="linkrow" style="margin-top:22px"><a href="/">← Back to site</a></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ====== FILL THESE IN WITH YOUR OWN VALUES ======
+  const SUPABASE_URL  = "https://yyvgdqzpyuwindemymrh.supabase.co";
+  const SUPABASE_ANON = "sb_publishable_BNDhIUexjrzy9ds-UQQvqA_6fj1kA4e";      // the "publishable" (sb_publishable_...) or "anon public" (eyJ...) key.
+                                              // NEVER the sb_secret_... / service_role key: this file is public.
+  // =================================================
+
+  // createClient throws on the placeholder values above, which would leave the
+  // page stuck on "Loading…" forever, so say what's wrong instead.
+  if (!/^https:\/\/.+/.test(SUPABASE_URL) || SUPABASE_ANON.startsWith("YOUR_")){
+    document.getElementById("view-loading").innerHTML =
+      '<p class="msg show error">Site not configured: set SUPABASE_URL and SUPABASE_ANON in account.html.</p>';
+    throw new Error("account.html: SUPABASE_URL / SUPABASE_ANON not set");
+  }
+  // A secret/service key here would hand every visitor full database access.
+  if (SUPABASE_ANON.startsWith("sb_secret_") || /service_role/.test((() => { try { return atob(SUPABASE_ANON.split(".")[1]); } catch { return ""; } })())){
+    document.getElementById("view-loading").innerHTML =
+      '<p class="msg show error">Wrong key: SUPABASE_ANON is a secret key. Use the publishable / anon public key, and rotate the secret one.</p>';
+    throw new Error("account.html: secret key used as SUPABASE_ANON");
+  }
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  const views = {
+    loading:  document.getElementById("view-loading"),
+    auth:     document.getElementById("view-auth"),
+    pending:  document.getElementById("view-pending"),
+    download: document.getElementById("view-download"),
+  };
+  function show(name){ for(const k in views) views[k].classList.toggle("hidden", k!==name); }
+
+  const msg = document.getElementById("msg");
+  function showMsg(text, kind){ msg.textContent = text; msg.className = "msg show " + kind; }
+  function clearMsg(){ msg.className = "msg"; }
+
+  let mode = "login"; // or "signup"
+  const title = document.getElementById("form-title");
+  const submitBtn = document.getElementById("submit-btn");
+  const toggleLine = document.getElementById("toggle-line");
+  const emailEl = document.getElementById("email");
+  const passEl = document.getElementById("password");
+
+  // Login <-> signup toggle. (Only one handler: a second one on the same link
+  // flipped the mode straight back, so "Create an account" did nothing.)
+  function bindToggle(){
+    document.getElementById("toggle-link").onclick = () => {
+      mode = mode === "login" ? "signup" : "login";
+      clearMsg();
+      if (mode === "signup"){
+        title.textContent = "Create account"; submitBtn.textContent = "Sign up";
+        toggleLine.innerHTML = 'Already have an account? <a id="toggle-link">Log in</a>';
+      } else {
+        title.textContent = "Log in"; submitBtn.textContent = "Log in";
+        toggleLine.innerHTML = 'New here? <a id="toggle-link">Create an account</a>';
+      }
+      bindToggle();
+    };
+  }
+  bindToggle();
+
+  submitBtn.addEventListener("click", handleSubmit);
+  passEl.addEventListener("keydown", e => { if (e.key === "Enter") handleSubmit(); });
+
+  async function handleSubmit(){
+    clearMsg();
+    const email = emailEl.value.trim();
+    const password = passEl.value;
+    if (!email || !password){ showMsg("Enter your email and password.", "error"); return; }
+    if (mode === "signup" && password.length < 8){ showMsg("Password must be at least 8 characters.", "error"); return; }
+
+    submitBtn.disabled = true;
+    const original = submitBtn.textContent;
+    submitBtn.innerHTML = '<span class="spinner"></span>';
+
+    try {
+      if (mode === "signup"){
+        const { data, error } = await sb.auth.signUp({ email, password });
+        if (error) throw error;
+        // With "Confirm email" off, Supabase signs the new user straight in.
+        if (data && data.session){ await route(); return; }
+        showMsg("Account created. Check your inbox for the confirmation link, then log in.", "ok");
+        mode = "login"; title.textContent = "Log in";
+        toggleLine.innerHTML = 'New here? <a id="toggle-link">Create an account</a>'; bindToggle();
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        await route(); // logged in — decide which screen
+        return;
+      }
+    } catch (err){
+      const text = err.message || "Something went wrong.";
+      showMsg(/rate limit/i.test(text) || err.status === 429
+        ? "Too many sign-ups right now. Please wait a bit and try again, or ask in our Discord."
+        : text, "error");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = original;
+    }
+  }
+
+  // After login (or on page load with a session), check the authorized flag
+  async function route(){
+    const { data:{ user } } = await sb.auth.getUser();
+    if (!user){ show("auth"); return; }
+
+    // maybeSingle(): a missing row is data=null, not an error, so a real read
+    // error (bad key, missing table, RLS/grant problem) can be told apart.
+    const { data, error } = await sb
+      .from("profiles").select("authorized, email").eq("id", user.id).maybeSingle();
+
+    const email = (data && data.email) || user.email;
+    const pendingNote = document.getElementById("pending-note");
+    if (error){
+      console.error("[account] profiles read failed:", error);
+      pendingNote.textContent = "Couldn't check your approval status (" + (error.message || error.code || "unknown error") +
+        "). If you're the site owner, run supabase-setup.sql in the Supabase SQL editor.";
+      pendingNote.className = "msg show error";
+    } else if (!data){
+      console.warn("[account] no profiles row for user", user.id);
+      pendingNote.textContent = "No profile row exists for this account yet. If you're the site owner, run supabase-setup.sql (it creates the missing rows).";
+      pendingNote.className = "msg show info";
+    } else {
+      pendingNote.className = "msg";
+    }
+
+    if (data && data.authorized === true){
+      stopPolling();
+      document.getElementById("dl-email").textContent = email;
+      show("download");
+    } else {
+      document.getElementById("pending-email").textContent = email;
+      show("pending");
+      startPolling();
+    }
+  }
+
+  // While pending, re-check every 15s so the page really does unlock on its
+  // own once the account is approved (no reload needed).
+  let pollTimer = null;
+  function startPolling(){
+    if (!pollTimer) pollTimer = setInterval(() => { route().catch(() => {}); }, 15000);
+  }
+  function stopPolling(){ clearInterval(pollTimer); pollTimer = null; }
+
+  async function signOut(){ await sb.auth.signOut(); location.reload(); }
+  document.getElementById("signout-pending").addEventListener("click", signOut);
+  document.getElementById("signout-dl").addEventListener("click", signOut);
+
+  // ---- Gated download: send the user's token to the download service ----
+  const DOWNLOAD_BASE = "https://dl.revive-client.com";
+  const dlStatus = document.getElementById("dl-status");
+
+  document.querySelectorAll("#view-download .dlbtn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const key = btn.getAttribute("data-key"); // "windows" or "linux"
+      dlStatus.className = "msg show info";
+      dlStatus.innerHTML = '<span class="spinner"></span> Verifying and starting download…';
+
+      try {
+        // current session token
+        const { data:{ session } } = await sb.auth.getSession();
+        if (!session){ dlStatus.className="msg show error"; dlStatus.textContent="Please sign in again."; return; }
+
+        // call the service with the token; it verifies + streams the file
+        const resp = await fetch(`${DOWNLOAD_BASE}/download/${key}`, {
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+
+        if (!resp.ok){
+          let m = "Download failed.";
+          try { m = (await resp.json()).error || m; } catch {}
+          dlStatus.className = "msg show error";
+          dlStatus.textContent = m;
+          return;
+        }
+
+        // turn the response into a file the browser saves
+        const blob = await resp.blob();
+        const cd = resp.headers.get("Content-Disposition") || "";
+        const match = cd.match(/filename="?([^"]+)"?/);
+        const filename = match ? match[1] : (key === "windows" ? "Revive-Setup.exe" : "Revive.AppImage");
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+        a.remove(); URL.revokeObjectURL(url);
+
+        dlStatus.className = "msg show ok";
+        dlStatus.textContent = "Download started. Check your downloads folder.";
+      } catch (err){
+        dlStatus.className = "msg show error";
+        dlStatus.textContent = "Could not reach the download server. Try again.";
+      }
+    });
+  });
+
+  // On load: if already logged in, route straight to the right screen
+  (async () => {
+    try { await route(); }
+    catch { show("auth"); }
+  })();
+</script>
+</body>
+</html>

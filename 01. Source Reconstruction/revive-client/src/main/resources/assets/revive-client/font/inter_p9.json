@@ -1,0 +1,15 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "revive-client:inter.ttf",
+      "shift": [0, 0],
+      "size": 4.5,
+      "oversample": 2.0
+    },
+    {
+      "type": "reference",
+      "id": "minecraft:default"
+    }
+  ]
+}

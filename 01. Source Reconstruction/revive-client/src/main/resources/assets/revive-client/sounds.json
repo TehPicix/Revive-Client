@@ -1,0 +1,8 @@
+{
+  "uh_oh": {
+    "category": "master",
+    "sounds": [
+      { "name": "revive-client:uh_oh", "stream": false }
+    ]
+  }
+}

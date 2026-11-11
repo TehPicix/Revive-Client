@@ -1,0 +1,56 @@
+plugins {
+	id 'java'
+}
+
+base {
+	archivesName = project.archives_base_name
+}
+
+group = project.maven_group
+version = "${project.minecraft_version}-" + (project.hasProperty('build_number') ? project.build_number : 'local')
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+	it.options.encoding = 'UTF-8'
+}
+
+repositories {
+	maven {
+		name = 'Fabric'
+		url = 'https://maven.fabricmc.net/'
+	}
+	mavenCentral()
+}
+
+dependencies {
+	// Fabric Loader supplies the PreLaunchEntrypoint API + FabricLoader (and slf4j) at runtime.
+	// Compile-only: the loader targets no Minecraft classes, so there is nothing to remap and no
+	// reason to pull in Loom or a Minecraft dependency.
+	compileOnly "net.fabricmc:fabric-loader:${project.loader_version}"
+	compileOnly "org.slf4j:slf4j-api:2.0.16"
+}
+
+processResources {
+	def props = [
+		version           : project.version,
+		maven_group       : project.maven_group,
+		archives_base_name: project.archives_base_name,
+		loader_version    : project.loader_version,
+		minecraft_version : project.minecraft_version
+	]
+	inputs.properties props
+	filesMatching('fabric.mod.json') {
+		expand props
+	}
+}
+
+jar {
+	from('LICENSE') {
+		rename { "${it}_${project.archives_base_name}" }
+	}
+}

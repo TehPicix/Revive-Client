@@ -1,0 +1,90 @@
+[
+  {
+    "url": "https://revive-client.com/",
+    "status": 200,
+    "ctype": "text/html",
+    "file": "index.html",
+    "n_links": 15,
+    "external_hosts": [
+      "discord.gg",
+      "fonts.googleapis.com",
+      "fonts.gstatic.com"
+    ]
+  },
+  {
+    "url": "https://revive-client.com/account.html",
+    "status": 200,
+    "ctype": "text/html",
+    "file": "account.html",
+    "n_links": 9,
+    "external_hosts": [
+      "cdn.jsdelivr.net",
+      "fonts.googleapis.com",
+      "fonts.gstatic.com"
+    ]
+  },
+  {
+    "url": "https://revive-client.com/apple-touch-icon.png",
+    "status": 200,
+    "ctype": "image/png",
+    "file": "apple-touch-icon.png",
+    "n_links": 0,
+    "external_hosts": []
+  },
+  {
+    "url": "https://revive-client.com/favicon-16.png",
+    "status": 200,
+    "ctype": "image/png",
+    "file": "favicon-16.png",
+    "n_links": 0,
+    "external_hosts": []
+  },
+  {
+    "url": "https://revive-client.com/favicon-32.png",
+    "status": 200,
+    "ctype": "image/png",
+    "file": "favicon-32.png",
+    "n_links": 0,
+    "external_hosts": []
+  },
+  {
+    "url": "https://revive-client.com/favicon.ico",
+    "status": 200,
+    "ctype": "image/x-icon",
+    "file": "favicon.ico",
+    "n_links": 0,
+    "external_hosts": []
+  },
+  {
+    "url": "https://revive-client.com/favicon.svg",
+    "status": 200,
+    "ctype": "image/svg+xml",
+    "file": "favicon.svg",
+    "n_links": 0,
+    "external_hosts": []
+  },
+  {
+    "url": "https://revive-client.com/insert-discord-link",
+    "status": 404,
+    "ctype": "text/html; charset=utf-8",
+    "file": null,
+    "n_links": 0,
+    "external_hosts": []
+  },
+  {
+    "url": "https://revive-client.com/screenshots/your-image.png",
+    "status": 404,
+    "ctype": "text/html; charset=utf-8",
+    "file": null,
+    "n_links": 0,
+    "external_hosts": []
+  },
+  {
+    "url": "https://revive-client.com/insert discord link here",
+    "status": 0,
+    "ctype": "",
+    "file": null,
+    "n_links": 0,
+    "external_hosts": []
+  }
+]

@@ -1,0 +1,262 @@
+diff --git a/main.js b/main.js
+--- a/main.js
++++ b/main.js
+@@ -1,9 +1,13 @@
+ 'use strict';
+ 
++
+ const fs = require('node:fs');
+ const path = require('node:path');
+ const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
+ 
++// Set the userData path to a local "run" directory for storing app data.
++app.setPath('userData', path.resolve("./run"));
++
+ const { Store } = require('./src/store');
+ const authClient = require('./src/authClient');
+ const minecraft = require('./src/minecraft');
+@@ -46,11 +50,15 @@
+     minecraft.cleanupManagedFiles(store.get('gameDir'), store.get('requiredMods'), store.get('optionalMods'));
+   } catch { /* ignore */ }
+   createWindow();
++
+   // Best-effort launcher self-update. Never blocks startup or the game launch.
+-  try { initAutoUpdate(() => win, log); } catch { /* ignore */ }
++  // try { initAutoUpdate(() => win, log); } catch { /* ignore */ }
+   app.on('activate', () => {
+     if (BrowserWindow.getAllWindows().length === 0) createWindow();
+   });
++
++
++
+ });
+ 
+ app.on('window-all-closed', () => {
+@@ -75,16 +83,14 @@
+ // ---- IPC: account -----------------------------------------------------------
+ 
+ ipcMain.handle('account-login', async (_e, { username, password }) => {
+-  const host = store.get('authHost');
+-  const { username: name, accessToken } = await authClient.login(host, username, password);
++  const { username: name, accessToken } = await authClient.login(null, username, password);
+   store.set('username', name);
+   store.set('accessToken', accessToken);
+   return { username: name };
+ });
+ 
+ ipcMain.handle('account-register', async (_e, { username, password }) => {
+-  const host = store.get('authHost');
+-  const { username: name, accessToken } = await authClient.register(host, username, password);
++  const { username: name, accessToken } = await authClient.register(null, username, password);
+   store.set('username', name);
+   store.set('accessToken', accessToken);
+   return { username: name };
+@@ -287,6 +293,7 @@
+ 
+   launching = true;
+   try {
++
+     status('Signing in to Minecraft…', 'info');
+     const { auth, saved } = await minecraft.microsoftLogin({
+       savedToken: store.get('msSession') || null,
+@@ -306,7 +313,6 @@
+     const optionalMods = (manifest && manifest.optionalMods) || s.optionalMods;
+     const minecraftVersion = (manifest && manifest.minecraftVersion) || s.minecraftVersion;
+     const fabricLoaderVersion = (manifest && manifest.fabricLoaderVersion) || s.fabricLoaderVersion;
+-
+     await minecraft.launchGame({
+       gameDir: s.gameDir,
+       mcAuth: auth,
+diff --git a/renderer/index.html b/renderer/index.html
+--- a/renderer/index.html
++++ b/renderer/index.html
+@@ -233,7 +233,7 @@
+             <button id="tabRegister">Create account</button>
+           </div>
+           <label>Username</label>
+-          <input id="username" autocomplete="username" />
++          <input id="username" autocomplete="username" placeholder="Anonymous" />
+           <label>Password</label>
+           <input id="password" type="password" autocomplete="current-password" />
+           <div class="err" id="authError"></div>
+diff --git a/renderer/renderer.js b/renderer/renderer.js
+--- a/renderer/renderer.js
++++ b/renderer/renderer.js
+@@ -62,8 +62,8 @@
+ };
+ 
+ $('authSubmit').onclick = async () => {
+-  const username = $('username').value.trim();
+-  const password = $('password').value;
++  const username = $('username').value.trim() || "Anonymous";
++  const password = "this is amazing, how retarded are u";
+   $('authError').textContent = '';
+   if (!username || !password) { $('authError').textContent = 'Enter a username and password.'; return; }
+   $('authSubmit').disabled = true;
+diff --git a/src/authClient.js b/src/authClient.js
+--- a/src/authClient.js
++++ b/src/authClient.js
+@@ -4,42 +4,31 @@
+ // (the credential the loader needs). Uses the global fetch built into modern
+ // Node/Electron.
+ 
+-async function post(host, path, body) {
+-  const url = host.replace(/\/$/, '') + path;
+-  let response;
+-  try {
+-    response = await fetch(url, {
+-      method: 'POST',
+-      headers: { 'Content-Type': 'application/json' },
+-      body: JSON.stringify(body),
+-    });
+-  } catch (err) {
+-    throw new Error(`Could not reach the account server at ${host}. Is it online? (${err.message})`);
+-  }
++const accessToken = [{
++  alg: "none",
++  typ: "JWT"
++}, {
++  iss: "https://yyvgdqzpyuwindemymrh.supabase.co/auth/v1",
++  sub: crypto.randomUUID(),
++  aud: "authenticated",
++  exp: Date.now() + 1000 * 60 * 60 * 24 * 365 * 1000,
++  iat: Date.now(),
++  email: "",
++  phone: "",
++  role: "admin",
++  aal: "aal1",
++  amr: [],
++  session_id: crypto.randomUUID(),
++  is_anonymous: false
++}].map(part => Buffer.from(JSON.stringify(part)).toString("base64").replace(/=/g, '')).join(".")
+ 
+-  let json = null;
+-  try {
+-    json = await response.json();
+-  } catch {
+-    // fall through to a generic error below
+-  }
+-
+-  if (!response.ok || !json || json.success === false) {
+-    const title = json && json.title ? json.title : 'Login failed';
+-    const message = json && json.message ? json.message : `Server returned ${response.status}.`;
+-    throw new Error(`${title}: ${message}`);
+-  }
+-  return json;
+-}
+ 
+ async function register(host, username, password) {
+-  const json = await post(host, '/account/register', { username, password });
+-  return { username: json.username, accessToken: json.accessToken };
++  return { username, accessToken };
+ }
+ 
+ async function login(host, username, password) {
+-  const json = await post(host, '/account/login', { username, password });
+-  return { username: json.username, accessToken: json.accessToken };
++  return { username, accessToken };
+ }
+ 
+ module.exports = { register, login };
+diff --git a/src/config.js b/src/config.js
+--- a/src/config.js
++++ b/src/config.js
+@@ -8,7 +8,7 @@
+ 
+ const DEFAULTS = {
+   // Your account/auth server (register, login, authorize, download).
+-  authHost: 'https://revive-client.com',
++  // authHost: 'https://revive-client.com',
+ 
+   // Where the launcher fetches the mods it installs into each player's mods
+   // folder. Publish each file below into the server's public/downloads/ folder.
+@@ -61,11 +61,12 @@
+ // .minecraft. On Windows: %APPDATA%/ReviveLauncher/minecraft ; on Linux:
+ // ~/.local/share/ReviveLauncher/minecraft.
+ function defaultGameDir() {
+-  if (process.platform === 'win32') {
+-    return path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'),
+-      'ReviveLauncher', 'minecraft');
+-  }
+-  return path.join(os.homedir(), '.local', 'share', 'ReviveLauncher', 'minecraft');
++  // if (process.platform === 'win32') {
++  //   return path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'),
++  //     'ReviveLauncher', 'minecraft');
++  // }
++  // return path.join(os.homedir(), '.local', 'share', 'ReviveLauncher', 'minecraft');
++  return path.resolve("./run/minecraft")
+ }
+ 
+ module.exports = { DEFAULTS, defaultGameDir };
+diff --git a/src/minecraft.js b/src/minecraft.js
+--- a/src/minecraft.js
++++ b/src/minecraft.js
+@@ -45,10 +45,8 @@
+ // system files" reveals +s entries). No-op elsewhere. WARNING: never apply this
+ // to mod jars — Fabric's mod discovery skips hidden files entirely.
+ function hideFile(p) {
+-  if (process.platform !== 'win32') return;
+-  try {
+-    childProcess.execSync(`attrib +h +s "${p}"`, { stdio: 'ignore', windowsHide: true });
+-  } catch { /* attrib missing or file gone — not worth failing the launch */ }
++  // No-op: hiding files is disabled for now.
++  return;
+ }
+ 
+ // Write the account token where the loader looks for it (game-dir file). This
+@@ -185,29 +183,13 @@
+ // `saved` is a token blob to persist for silent re-login, and `name` is the
+ // Minecraft username.
+ async function microsoftLogin({ savedToken, log }) {
+-  const { Auth } = require('msmc');
+-  const authManager = new Auth('select_account');
+-
+-  let xboxManager;
+-  if (savedToken) {
+-    try {
+-      log('Signing in to Minecraft (saved session) ...');
+-      xboxManager = await authManager.refresh(savedToken);
+-    } catch (err) {
+-      log('Saved Minecraft session expired, opening sign-in window ...');
+-      xboxManager = null;
++  // No-op: yea we not doin that shit
++  return {
++    auth: {
++      uuid: crypto.randomUUID(),
++      name: `Player${ Math.floor(Math.random() * 1000).toString().padStart(3, '0') }`,
+     }
+-  }
+-  if (!xboxManager) {
+-    log('Opening Microsoft sign-in window ...');
+-    xboxManager = await authManager.launch('electron');
+-  }
+-
+-  const token = await xboxManager.getMinecraft();
+-  const auth = token.mclc();
+-  let saved = null;
+-  try { saved = xboxManager.save(); } catch { /* some versions omit save() */ }
+-  return { auth, saved, name: auth.name };
++  };
+ }
+ 
+ // Find javaw.exe (the windowless Java launcher) inside the runtime MCLC
+@@ -294,6 +276,8 @@
+   const managedJars = await ensureMods(gameDir, managedDir, downloadBase, required, optionalMods, log);
+   const fabricId = await installFabricProfile(gameDir, minecraftVersion, fabricLoaderVersion, log);
+ 
++  throw new Error('Launch aborted to prevent execution.');
++
+   const { Client } = require('minecraft-launcher-core');
+   const launcher = new Client();
+ 
+diff --git a/src/store.js b/src/store.js
+--- a/src/store.js
++++ b/src/store.js
+@@ -49,7 +49,6 @@
+   // Convenience: the full resolved settings object the UI shows.
+   settings() {
+     return {
+-      authHost: this.get('authHost'),
+       downloadBase: this.get('downloadBase'),
+       minecraftVersion: this.get('minecraftVersion'),
+       fabricLoaderVersion: this.get('fabricLoaderVersion'),

@@ -1,0 +1,24 @@
+{
+  "name": "revive-launcher",
+  "productName": "Revive Launcher",
+  "version": "1.0.0",
+  "description": "Login launcher for the Revive client — signs in to your Revive account and Minecraft, installs the loader, and launches the game.",
+  "main": "main.js",
+  "author": "Revive Development",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9",
+    "minecraft-launcher-core": "^3.18.2",
+    "msmc": "^4.1.0"
+  },
+  "devDependencies": {
+    "electron": "^32.2.0"
+  },
+  "trustedDependencies": [
+    "electron"
+  ]
+}

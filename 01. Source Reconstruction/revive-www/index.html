@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revive — Utility client for 2b2t</title>
+<meta name="description" content="Revive is a Fabric utility client built for 2b2t, the oldest anarchy server in Minecraft. Come back to life. Outlast the void.">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#ff69be">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent:#ff69be; --accent2:#c084fc; --accent3:#f0abfc;
+    --bg:#0e0a16; --bg2:#140d20;
+    --panel:rgba(48,34,64,.46); --panel2:rgba(48,34,64,.62);
+    --text:#f3e9ff; --muted:#bfa6d6;
+    --border:rgba(220,150,205,.18); --border2:rgba(220,150,205,.30);
+    --ok:#79e6c2; --gold:#ecc37a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,sans-serif; line-height:1.65;
+    overflow-x:hidden; -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent);color:#fff}
+  ::-webkit-scrollbar{width:10px}
+  ::-webkit-scrollbar-thumb{background:rgba(220,150,205,.25);border-radius:9px}
+
+  /* aurora background matching the launcher */
+  .aurora{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(560px 380px at 10% 6%, rgba(255,105,190,.20), transparent 60%),
+      radial-gradient(600px 420px at 92% 24%, rgba(192,132,252,.20), transparent 60%),
+      radial-gradient(520px 340px at 60% 110%, rgba(240,171,252,.15), transparent 60%),
+      var(--bg);
+    animation:drift 16s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    0%{transform:translate3d(-2%,-1%,0) scale(1.06)}
+    100%{transform:translate3d(3%,2%,0) scale(1.13)}
+  }
+  .wrap{max-width:1140px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+  /* header */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:50;height:60px;
+    display:flex;align-items:center;
+    background:rgba(14,10,22,.55);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+  }
+  .nav{display:flex;align-items:center;justify-content:space-between;width:100%}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Fredoka',sans-serif;
+    font-weight:700;font-size:21px;letter-spacing:.3px}
+  .brand svg{width:34px;height:auto;filter:drop-shadow(0 4px 12px rgba(255,105,190,.4))}
+  .brand b{background:linear-gradient(100deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .navlinks{display:flex;gap:26px;align-items:center}
+  .navlinks a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;transition:color .15s}
+  .navlinks a:hover{color:var(--text)}
+  .navlinks .dl{
+    background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;
+    padding:9px 18px;border-radius:10px;font-weight:600;
+    box-shadow:0 10px 26px -12px var(--accent);
+  }
+  .navlinks .dl:hover{filter:brightness(1.08);color:#fff}
+  @media(max-width:720px){.navlinks a:not(.dl){display:none}}
+
+  /* hero */
+  .hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:120px 0 60px}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center;width:100%}
+  @media(max-width:860px){.hero-grid{grid-template-columns:1fr;text-align:center}}
+  .tag{
+    display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:500;
+    color:var(--accent3);border:1px solid var(--border2);border-radius:999px;
+    padding:7px 15px;margin-bottom:26px;background:rgba(48,34,64,.3);
+  }
+  .tag .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);
+    box-shadow:0 0 10px var(--ok);animation:beat 2s infinite}
+  @keyframes beat{0%,100%{opacity:1}50%{opacity:.4}}
+  h1{font-family:'Fredoka',sans-serif;font-weight:700;
+    font-size:clamp(44px,7.5vw,82px);line-height:1.02;letter-spacing:-.5px;margin-bottom:20px}
+  h1 .grad{background:linear-gradient(100deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{font-size:clamp(16px,2vw,19px);color:var(--muted);max-width:520px;margin-bottom:34px}
+  @media(max-width:860px){.lead{margin-left:auto;margin-right:auto}}
+  .lead b{color:var(--text);font-weight:600}
+  .cta-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  @media(max-width:860px){.cta-row{justify-content:center}}
+  .btn{font-family:'Fredoka',sans-serif;font-weight:600;font-size:16px;
+    padding:15px 30px;border-radius:12px;text-decoration:none;
+    display:inline-flex;align-items:center;gap:9px;cursor:pointer;transition:.18s;border:none}
+  .btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;
+    box-shadow:0 14px 34px -12px var(--accent);animation:glow 3.4s ease-in-out infinite}
+  @keyframes glow{0%,100%{box-shadow:0 14px 34px -14px var(--accent)}
+    50%{box-shadow:0 18px 44px -10px var(--accent),0 0 0 1px rgba(192,132,252,.4)}}
+  .btn-primary:hover{filter:brightness(1.08);transform:translateY(-2px)}
+  .btn-ghost{background:var(--panel);border:1px solid var(--border2);color:var(--text)}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--text)}
+  .ver{font-size:13px;color:var(--muted)}
+
+  /* mascot card */
+  .mascot-card{
+    background:var(--panel);border:1px solid var(--border);border-radius:24px;
+    padding:44px;text-align:center;backdrop-filter:blur(14px);
+    box-shadow:0 30px 70px -30px rgba(0,0,0,.8);position:relative;overflow:hidden;
+  }
+  .mascot-card:before{content:"";position:absolute;top:-40%;left:-10%;width:120%;height:80%;
+    background:radial-gradient(circle,rgba(255,105,190,.15),transparent 70%);pointer-events:none}
+  .mascot-card svg.big{width:180px;height:auto;position:relative;
+    filter:drop-shadow(0 16px 34px rgba(255,105,190,.4));animation:bob 3.6s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-8px)}}
+  .mascot-card .cap{margin-top:18px;font-family:'Fredoka',sans-serif;font-size:15px;color:var(--muted)}
+  .mascot-card .cap b{color:var(--text)}
+
+  /* stat strip */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:60px}
+  @media(max-width:600px){.stats{grid-template-columns:1fr}}
+  .stat{background:var(--panel);border:1px solid var(--border);border-radius:16px;
+    padding:22px;backdrop-filter:blur(10px)}
+  .stat .n{font-family:'Fredoka',sans-serif;font-size:30px;font-weight:700;
+    background:linear-gradient(100deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat .l{font-size:13px;color:var(--muted);margin-top:2px}
+
+  /* sections */
+  section{padding:100px 0;position:relative}
+  .eyebrow{font-family:'Fredoka',sans-serif;font-size:14px;letter-spacing:.15em;
+    text-transform:uppercase;color:var(--accent3);margin-bottom:14px;font-weight:600}
+  .sec-title{font-family:'Fredoka',sans-serif;font-weight:700;
+    font-size:clamp(30px,5vw,50px);line-height:1.05;margin-bottom:16px}
+  .sec-sub{color:var(--muted);max-width:620px;margin-bottom:52px;font-size:16px}
+
+  /* features */
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:840px){.feat-grid{grid-template-columns:1fr}}
+  .feat{background:var(--panel);border:1px solid var(--border);border-radius:18px;
+    padding:28px;backdrop-filter:blur(12px);transition:.2s}
+  .feat:hover{transform:translateY(-4px);border-color:var(--border2);
+    box-shadow:0 24px 50px -30px var(--accent)}
+  .feat .ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;
+    justify-content:center;font-size:22px;margin-bottom:16px;
+    background:linear-gradient(135deg,rgba(255,105,190,.2),rgba(192,132,252,.2));
+    border:1px solid var(--border2)}
+  .feat h3{font-family:'Fredoka',sans-serif;font-size:20px;font-weight:600;margin-bottom:8px}
+  .feat p{font-size:14.5px;color:var(--muted)}
+
+  /* split / why */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+  @media(max-width:840px){.split{grid-template-columns:1fr;gap:36px}}
+  .checklist{list-style:none;margin-top:8px}
+  .checklist li{padding:16px 0;border-bottom:1px solid var(--border);display:flex;gap:14px;align-items:flex-start}
+  .checklist li:last-child{border-bottom:none}
+  .checklist .plus{width:26px;height:26px;border-radius:8px;flex:none;display:flex;
+    align-items:center;justify-content:center;font-weight:700;color:#fff;
+    background:linear-gradient(135deg,var(--accent),var(--accent2))}
+  .checklist b{font-family:'Fredoka',sans-serif;font-size:17px;font-weight:600;display:block;margin-bottom:2px}
+  .checklist span{color:var(--muted);font-size:14px}
+
+  /* launcher preview */
+  .preview-card{background:var(--panel);border:1px solid var(--border);border-radius:20px;
+    padding:14px;backdrop-filter:blur(14px);box-shadow:0 30px 70px -30px rgba(0,0,0,.8)}
+  .preview-bar{display:flex;gap:7px;padding:8px 10px 14px}
+  .preview-bar .d{width:11px;height:11px;border-radius:50%;background:var(--border2)}
+  .preview-inner{background:rgba(8,5,14,.6);border:1px solid var(--border);border-radius:12px;
+    padding:22px;text-align:center}
+  .preview-inner svg{width:88px;height:auto;filter:drop-shadow(0 8px 20px rgba(255,105,190,.4))}
+  .preview-inner .wm{font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;margin-top:8px}
+  .preview-inner .wm b{background:linear-gradient(100deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .preview-inner .pv{font-size:11px;color:var(--muted);margin-top:2px}
+  .preview-play{margin-top:16px;padding:12px;border-radius:10px;color:#fff;font-family:'Fredoka',sans-serif;
+    font-weight:600;background:linear-gradient(180deg,var(--accent),var(--accent2));font-size:15px}
+  .preview-chips{display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .preview-chips span{font-size:11px;color:var(--muted);border:1px solid var(--border2);
+    border-radius:999px;padding:3px 9px}
+
+  /* warning band */
+  .band{border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+    background:rgba(236,195,122,.05);padding:30px 0}
+  .band .wrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .band .warn{font-family:'Fredoka',sans-serif;font-weight:600;color:var(--gold);font-size:15px;
+    display:flex;align-items:center;gap:10px;flex:none}
+  .band p{font-size:13.5px;color:var(--muted);flex:1;min-width:260px}
+
+  /* final */
+  .final{text-align:center;padding:120px 0}
+  .final .eyebrow{text-align:center}
+  .final h2{font-family:'Fredoka',sans-serif;font-weight:700;
+    font-size:clamp(38px,6.5vw,72px);line-height:1;margin-bottom:18px}
+  .final h2 .grad{background:linear-gradient(100deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .final p{color:var(--muted);margin-bottom:34px;font-size:17px}
+  .plat{display:flex;gap:10px;justify-content:center;margin-top:18px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+  .plat span{border:1px solid var(--border2);border-radius:999px;padding:5px 13px;background:var(--panel)}
+  /* dual download buttons */
+  .dlbtns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+  .dlbtn{display:inline-flex;align-items:center;gap:12px;text-decoration:none;
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;
+    padding:16px 30px;border-radius:14px;transition:.18s;text-align:left;line-height:1.15}
+  .dlbtn svg{width:26px;height:26px;flex:none}
+  .dlbtn .dl-lines{display:flex;flex-direction:column}
+  .dlbtn .dl-lines small{font-size:11px;font-weight:400;opacity:.8}
+  .dlbtn.win{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;
+    box-shadow:0 14px 34px -12px var(--accent)}
+  .dlbtn.win:hover{filter:brightness(1.08);transform:translateY(-2px)}
+  .dlbtn.win svg{fill:#fff}
+  .dlbtn.lin{background:var(--panel);border:1px solid var(--border2);color:var(--text)}
+  .dlbtn.lin:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .dlbtn.lin svg{fill:var(--text)}
+
+  /* footer */
+  footer{border-top:1px solid var(--border);padding:40px 0;color:var(--muted);font-size:13px}
+  .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:18px;align-items:center}
+  .foot a{color:var(--muted);text-decoration:none;margin-left:22px;transition:color .15s}
+  .foot a:hover{color:var(--text)}
+  .disc{font-size:11.5px;color:rgba(191,166,214,.5);margin-top:16px;max-width:720px;line-height:1.7}
+
+  /* screenshots gallery */
+  .shots{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+  .shot{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--border);
+    background:var(--panel);backdrop-filter:blur(12px);aspect-ratio:16/10;
+    display:flex;align-items:center;justify-content:center;transition:.2s}
+  .shot:hover{transform:translateY(-4px);border-color:var(--border2);
+    box-shadow:0 24px 50px -30px var(--accent)}
+  .shot.wide{grid-column:span 4}
+  .shot.tall{grid-column:span 2}
+  .shot.half{grid-column:span 3}
+  @media(max-width:840px){
+    .shots{grid-template-columns:1fr}
+    .shot.wide,.shot.tall,.shot.half{grid-column:span 1}
+  }
+  .shot img{width:100%;height:100%;object-fit:cover;display:block}
+  /* placeholder shown until a real screenshot is dropped in */
+  .shot .ph{text-align:center;padding:22px;color:var(--muted);
+    background:
+      radial-gradient(circle at 30% 20%,rgba(255,105,190,.12),transparent 60%),
+      radial-gradient(circle at 80% 90%,rgba(192,132,252,.12),transparent 60%);
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:8px}
+  .shot .ph svg{width:52px;height:auto;opacity:.85;filter:drop-shadow(0 6px 16px rgba(255,105,190,.35))}
+  .shot .ph .cap{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:var(--text)}
+  .shot .ph .sub{font-size:12px;color:var(--muted)}
+  .shot .badge{position:absolute;top:12px;left:12px;font-size:11px;font-weight:600;
+    color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    padding:4px 10px;border-radius:999px;z-index:2}
+
+  /* discord section */
+  .discord{position:relative;padding:100px 0}
+  .discord-card{
+    background:
+      radial-gradient(700px 300px at 20% 0%,rgba(88,101,242,.22),transparent 60%),
+      var(--panel);
+    border:1px solid var(--border);border-radius:26px;padding:56px;backdrop-filter:blur(14px);
+    display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center;
+    box-shadow:0 30px 70px -34px rgba(0,0,0,.8);overflow:hidden;position:relative}
+  @media(max-width:760px){.discord-card{grid-template-columns:1fr;padding:38px;text-align:center}}
+  .discord-card h2{font-family:'Fredoka',sans-serif;font-weight:700;
+    font-size:clamp(28px,4.5vw,44px);line-height:1.05;margin-bottom:14px}
+  .discord-card p{color:var(--muted);font-size:16px;margin-bottom:26px;max-width:460px}
+  @media(max-width:760px){.discord-card p{margin-left:auto;margin-right:auto}}
+  .discord-cta{display:inline-flex;align-items:center;gap:11px;font-family:'Fredoka',sans-serif;
+    font-weight:600;font-size:17px;padding:15px 30px;border-radius:12px;text-decoration:none;
+    color:#fff;background:#5865F2;box-shadow:0 14px 34px -12px #5865F2;transition:.18s}
+  .discord-cta:hover{filter:brightness(1.1);transform:translateY(-2px)}
+  .discord-cta svg{width:24px;height:auto;fill:#fff}
+  .discord-side{display:flex;flex-direction:column;gap:12px}
+  .discord-side .drow{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--muted)}
+  .discord-side .drow .dico{width:36px;height:36px;border-radius:10px;flex:none;display:flex;
+    align-items:center;justify-content:center;font-size:18px;
+    background:linear-gradient(135deg,rgba(255,105,190,.2),rgba(192,132,252,.2));
+    border:1px solid var(--border2)}
+  .discord-side .drow b{color:var(--text);font-family:'Fredoka',sans-serif;font-weight:600}
+
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+
+<!-- shared mascot: 1-up mushroom holding totem + end crystal, arms raised -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="lup" viewBox="0 0 180 118">
+    <text x="2" y="16" font-family="ui-monospace, monospace" font-size="16" font-weight="700" fill="#8bff76" stroke="#123f12" stroke-width="1.2">+1</text>
+    <circle cx="136" cy="32" r="16" fill="#ff8fe6" opacity=".2"/>
+    <rect x="64" y="58" width="52" height="44" rx="14" fill="#f6e3c6" stroke="#1f6e26" stroke-width="3"/>
+    <path d="M52 62 C52 24 80 18 90 18 C100 18 128 24 128 62 Z" fill="#3fb43f" stroke="#1f6e26" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="70" cy="40" r="7" fill="#fff"/>
+    <circle cx="107" cy="36" r="6" fill="#fff"/>
+    <circle cx="90" cy="52" r="5" fill="#fff"/>
+    <rect x="77" y="70" width="6" height="14" rx="3" fill="#20232a"/>
+    <rect x="99" y="70" width="6" height="14" rx="3" fill="#20232a"/>
+    <path d="M83 88 Q90 95 97 88" fill="none" stroke="#20232a" stroke-width="3" stroke-linecap="round"/>
+    <path d="M66 86 C52 83 46 66 46 50" fill="none" stroke="#1f6e26" stroke-width="11" stroke-linecap="round"/>
+    <path d="M114 86 C128 83 134 66 134 50" fill="none" stroke="#1f6e26" stroke-width="11" stroke-linecap="round"/>
+    <path d="M66 86 C52 83 46 66 46 50" fill="none" stroke="#f6e3c6" stroke-width="7" stroke-linecap="round"/>
+    <path d="M114 86 C128 83 134 66 134 50" fill="none" stroke="#f6e3c6" stroke-width="7" stroke-linecap="round"/>
+    <rect x="23" y="36" width="10" height="6.5" rx="1.5" fill="#e2912f" stroke="#8a4a1e" stroke-width="1.6"/>
+    <rect x="51" y="36" width="10" height="6.5" rx="1.5" fill="#e2912f" stroke="#8a4a1e" stroke-width="1.6"/>
+    <path d="M33 37 L51 37 L48 49 L36 49 Z" fill="#e2912f" stroke="#8a4a1e" stroke-width="1.8" stroke-linejoin="round"/>
+    <rect x="31" y="21" width="22" height="17" rx="3" fill="#ecc37a" stroke="#8a4a1e" stroke-width="1.8"/>
+    <rect x="35" y="29" width="4.5" height="5" rx="1" fill="#6cbf3f" stroke="#3f7a25" stroke-width="1"/>
+    <rect x="44.5" y="29" width="4.5" height="5" rx="1" fill="#6cbf3f" stroke="#3f7a25" stroke-width="1"/>
+    <rect x="34" y="25" width="4" height="2.5" rx="1" fill="#fff" opacity=".6"/>
+    <rect x="39" y="40" width="6" height="6" rx="1" fill="#f3ecd8" stroke="#8a4a1e" stroke-width="1.4"/>
+    <path d="M136 18 L150 32 L136 46 L122 32 Z" fill="#f3a6e8" stroke="#b25fae" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M136 18 L143 32 L136 39 L129 32 Z" fill="#ffdaf6" opacity=".85"/>
+    <rect x="132.5" y="28.5" width="7" height="7" rx="1.2" fill="#c04fb0"/>
+    <rect x="134.5" y="30.5" width="3" height="3" fill="#ffd24a"/>
+    <circle cx="44" cy="50" r="7" fill="#f6e3c6" stroke="#1f6e26" stroke-width="3"/>
+    <circle cx="134" cy="50" r="7" fill="#f6e3c6" stroke="#1f6e26" stroke-width="3"/>
+  </symbol>
+</svg>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand"><svg viewBox="0 0 150 108"><use href="#lup"/></svg>Revive</div>
+    <nav class="navlinks">
+      <a href="#features">Features</a>
+      <a href="#shots">Screenshots</a>
+      <a href="#launcher">Launcher</a>
+      <a href="#community">Community</a>
+      <a href="/account.html">Log in</a>
+      <a href="/account.html" class="dl">Download</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="tag"><span class="dot"></span>Fabric utility client · built for anarchy</span>
+      <h1>Come back<br>to life on <span class="grad">2b2t</span>.</h1>
+      <p class="lead">Revive is a Minecraft utility client for the oldest anarchy server in existence. Movement, awareness, and combat tools — wrapped in a launcher that just works. <b>Log in, press play, survive.</b></p>
+      <div class="cta-row">
+        <a href="/account.html" class="btn btn-primary">▸ Download Revive</a>
+        <a href="#features" class="btn btn-ghost">See features</a>
+        <span class="ver">v0.1 · dev build</span>
+      </div>
+    </div>
+    <div class="mascot-card">
+      <svg class="big" viewBox="0 0 150 108"><use href="#lup"/></svg>
+      <div class="cap"><b>1-up.</b> Totem in one hand, crystal in the other.</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="wrap">
+    <div class="eyebrow">Features</div>
+    <h2 class="sec-title">Everything you need past spawn</h2>
+    <p class="sec-sub">2b2t has no rules and no mercy. Revive gives you the movement, awareness, and automation to make the trip out — and stay alive when you get there.</p>
+    <div class="feat-grid">
+      <div class="feat"><div class="ico">🪽</div><h3>Highway Runner</h3><p>Elytra automation and pathfinding tuned for the axis highways. Cover a million blocks without touching the keyboard.</p></div>
+      <div class="feat"><div class="ico">📡</div><h3>Player Radar</h3><p>ESP, tracers, and proximity alerts so you know someone's near before they load your base. Silence isn't safety.</p></div>
+      <div class="feat"><div class="ico">💎</div><h3>Crystal PvP</h3><p>Auto-crystal, auto-totem, surround, and hole detection built for the end-crystal meta that decides every fight.</p></div>
+      <div class="feat"><div class="ico">⏳</div><h3>Queue Manager</h3><p>Auto-reconnect, live queue position, and AFK-safe idling so a long wait never costs you your slot.</p></div>
+      <div class="feat"><div class="ico">🧭</div><h3>Stash Finder</h3><p>Chunk-based stash and base scanning while you travel — turn every trip into a raiding run.</p></div>
+      <div class="feat"><div class="ico">🎛️</div><h3>Clean HUD</h3><p>Draggable click-GUI, module search, and config profiles you can actually read at 20fps in a trashed chunk.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- LAUNCHER -->
+<section id="launcher">
+  <div class="wrap split">
+    <div>
+      <div class="eyebrow">The launcher</div>
+      <h2 class="sec-title">Log in. Press play. Done.</h2>
+      <p class="sec-sub" style="margin-bottom:28px">No juggling JARs or Fabric installers. The Revive launcher handles the modloader, keeps the client updated, and lets you drop in your own mods like Litematica.</p>
+      <ul class="checklist">
+        <li><div class="plus">+</div><div><b>One-click play</b><span>Sign in with your Revive account, hit play, and you're in Minecraft — the launcher wires up Fabric for you.</span></div></li>
+        <li><div class="plus">+</div><div><b>Auto-updating client</b><span>Client mods are installed and kept current automatically. No re-downloading on every patch.</span></div></li>
+        <li><div class="plus">+</div><div><b>Bring your own mods</b><span>Add any Fabric mod for the current version — Litematica, MaLiLib, whatever your setup needs.</span></div></li>
+        <li><div class="plus">+</div><div><b>Make it yours</b><span>Theme the launcher with custom accent colors and tune your RAM in settings.</span></div></li>
+      </ul>
+    </div>
+    <div class="preview-card">
+      <div class="preview-bar"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+      <div class="preview-inner">
+        <svg viewBox="0 0 150 108"><use href="#lup"/></svg>
+        <div class="wm">Revive <b>Launcher</b></div>
+        <div class="pv">Minecraft 1.21 · Fabric</div>
+        <div class="preview-play">▶ Play</div>
+        <div class="preview-chips"><span>Fabric</span><span>6 mods</span><span>Signed in</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SCREENSHOTS -->
+<section id="shots">
+  <div class="wrap">
+    <div class="eyebrow">Screenshots</div>
+    <h2 class="sec-title">See it in action</h2>
+    <p class="sec-sub">Drop your own in-game captures into these frames. Replace each placeholder's image and the layout takes care of the rest.</p>
+    <div class="shots">
+      <!-- To use a real screenshot: replace the whole .ph block inside a .shot with:
+           <img src="screenshots/your-image.png" alt="what it shows"> -->
+      <div class="shot wide">
+        <span class="badge">Client HUD</span>
+        <div class="ph">
+          <svg viewBox="0 0 150 108"><use href="#lup"/></svg>
+          <span class="cap">Hero shot — client HUD in-game</span>
+          <span class="sub">recommended 1280×800 · screenshots/hud.png</span>
+        </div>
+      </div>
+      <div class="shot tall">
+        <span class="badge">Click GUI</span>
+        <div class="ph">
+          <svg viewBox="0 0 150 108"><use href="#lup"/></svg>
+          <span class="cap">Module menu</span>
+          <span class="sub">screenshots/gui.png</span>
+        </div>
+      </div>
+      <div class="shot half">
+        <span class="badge">Radar / ESP</span>
+        <div class="ph">
+          <svg viewBox="0 0 150 108"><use href="#lup"/></svg>
+          <span class="cap">Player radar &amp; tracers</span>
+          <span class="sub">screenshots/radar.png</span>
+        </div>
+      </div>
+      <div class="shot half">
+        <span class="badge">Highway</span>
+        <div class="ph">
+          <svg viewBox="0 0 150 108"><use href="#lup"/></svg>
+          <span class="cap">Elytra on the highway</span>
+          <span class="sub">screenshots/highway.png</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section id="why">
+  <div class="wrap">
+    <div class="eyebrow">Why 2b2t</div>
+    <h2 class="sec-title">Not another minigame client</h2>
+    <p class="sec-sub">Most clients are tuned for Hypixel. Revive is built for the one server where the terrain itself is the enemy — queue-aware, lag-tolerant, highway-first.</p>
+    <div class="feat-grid">
+      <div class="feat"><div class="ico">🔁</div><h3>Queue-aware</h3><p>Handles the 2b2t priority and main queue natively, with reconnect logic that respects the server instead of fighting it.</p></div>
+      <div class="feat"><div class="ico">⚡</div><h3>Lag-tolerant</h3><p>Built to stay responsive in the entity-flooded, trashed chunks near spawn where other clients choke.</p></div>
+      <div class="feat"><div class="ico">💾</div><h3>Config that survives</h3><p>Profile system keeps your base coords and combat settings intact through every update.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- WARNING BAND -->
+<div class="band">
+  <div class="wrap">
+    <div class="warn">⚠ Know the risk</div>
+    <p>Third-party clients violate Minecraft's EULA and can get your account banned on most servers. 2b2t is anarchy and allows them, but you run this at your own risk. Revive is a hobby project in active development — expect bugs.</p>
+  </div>
+</div>
+
+<!-- COMMUNITY / DISCORD -->
+<section id="community" class="discord">
+  <div class="wrap">
+    <div class="discord-card">
+      <div>
+        <div class="eyebrow">Community</div>
+        <h2>Join the Revive Discord</h2>
+        <p>Get build announcements, report bugs, request modules, and find people to run to spawn with. It's where the client gets shaped.</p>
+        <a href="insert-discord-link" target="_blank" rel="noopener" class="discord-cta">
+          <svg viewBox="0 0 127 96" xmlns="http://www.w3.org/2000/svg"><path d="M107.7 8.07A105.15 105.15 0 0 0 81.47 0a72.06 72.06 0 0 0-3.36 6.83 97.68 97.68 0 0 0-29.11 0A72.37 72.37 0 0 0 45.64 0a105.89 105.89 0 0 0-26.25 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0 0 32.17 16.15 77.7 77.7 0 0 0 6.89-11.11 68.42 68.42 0 0 1-10.85-5.18c.91-.66 1.8-1.34 2.66-2a75.57 75.57 0 0 0 64.32 0c.87.71 1.76 1.39 2.66 2a68.68 68.68 0 0 1-10.87 5.19 77 77 0 0 0 6.89 11.1 105.25 105.25 0 0 0 32.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15ZM42.45 65.69C36.18 65.69 31 60 31 53s5-12.74 11.43-12.74S54 46 53.89 53s-5.05 12.69-11.44 12.69Zm42.24 0C78.41 65.69 73.25 60 73.25 53s5-12.74 11.44-12.74S96.23 46 96.12 53s-5.04 12.69-11.43 12.69Z"/></svg>
+          Join the server
+        </a>
+      </div>
+      <div class="discord-side">
+        <div class="drow"><div class="dico">📢</div><div><b>Build drops</b><br>New versions announced first</div></div>
+        <div class="drow"><div class="dico">🐛</div><div><b>Bug reports</b><br>Tell us what broke at spawn</div></div>
+        <div class="drow"><div class="dico">💡</div><div><b>Module requests</b><br>Help decide what's next</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD -->
+<section id="download" class="final">
+  <div class="wrap">
+    <div class="eyebrow">Get started</div>
+    <h2>Bring Revive<br><span class="grad">to spawn.</span></h2>
+    <p>Free while in development. Create an account and get approved to download.</p>
+    <div class="dlbtns" style="max-width:420px;margin:0 auto">
+      <a href="/account.html" class="dlbtn win">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/></svg>
+        <span class="dl-lines">Sign in to download<small>Account required &middot; approval needed</small></span>
+      </a>
+    </div>
+    <div class="plat"><span>Windows 10/11</span><span>Linux (AppImage)</span><span>Fabric 1.21</span></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div class="brand" style="font-size:17px"><svg viewBox="0 0 150 108"><use href="#lup"/></svg>Revive-Client.com</div>
+      <div>
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+        <a href="https://discord.gg/qVNtNKUTgc" target="_blank" rel="noopener">Discord</a>
+        <a href="#">GitHub</a>
+      </div>
+    </div>
+    <p class="disc">Revive is an independent project and is not affiliated with, endorsed by, or associated with Mojang, Microsoft, or 2b2t. Minecraft is a trademark of Mojang Synergies AB. Use of third-party clients may violate the Minecraft EULA and individual server rules. You are solely responsible for how you use this software.</p>
+  </div>
+</footer>
+
+</body>
+</html>

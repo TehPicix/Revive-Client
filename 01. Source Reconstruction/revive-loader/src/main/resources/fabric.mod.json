@@ -1,0 +1,22 @@
+{
+    "schemaVersion": 1,
+    "id": "${archives_base_name}",
+    "name": "Revive Loader",
+    "description": "Authenticated loader for the Revive client. Logs in against the Revive auth server and injects the client after a valid account is verified.",
+    "environment": "client",
+    "license": "All Rights Reserved",
+    "version": "${version}",
+    "authors": [
+        "Revive Development"
+    ],
+    "entrypoints": {
+        "preLaunch": [
+            "${maven_group}.PreLaunch"
+        ]
+    },
+    "depends": {
+        "fabricloader": ">=${loader_version}",
+        "java": ">=21",
+        "minecraft": ">=${minecraft_version}"
+    }
+}

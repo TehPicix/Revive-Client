@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "name": "ReviveClient",
+  "id": "revive-client",
+  "version": "1.21.11-local",
+  "description": "ReviveClient - A powerful Minecraft utility mod.",
+  "authors": [
+    "Crownizzle",
+    "_Synful"
+  ],
+  "contact": {
+    "homepage": "https://reviveclient.com",
+    "issues": "https://github.com/ReviveClient/revive-client/issues",
+    "sources": "https://github.com/ReviveClient/revive-client",
+    "discord": "https://reviveclient.com/discord"
+  },
+  "license": "GPL-3.0",
+  "icon": "assets/revive-client/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "revivedevelopment.reviveclient.ReviveClient"
+    ],
+    "modmenu": [
+      "revivedevelopment.reviveclient.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "revive-client.mixins.json"
+  ],
+  "accessWidener": "revive-client.accesswidener",
+  "custom": {
+    "revive-client:build_number": "",
+    "revive-client:color": "145,61,226",
+    "revive-client:commit": "",
+    "modmenu": {
+      "links": {
+        "modmenu.discord": "https://reviveclient.com/discord"
+      }
+    }
+  },
+  "depends": {
+    "java": "\u003e\u003d21",
+    "minecraft": [
+      "1.21.11"
+    ],
+    "fabricloader": "\u003e\u003d0.18.2"
+  },
+  "breaks": {
+    "optifabric": "*",
+    "feather": "*",
+    "origins": "*",
+    "sodium": "\u003c0.6.12",
+    "morechathistory": "*"
+  }
+}

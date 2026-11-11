@@ -1,0 +1,101 @@
+[versions]
+# Fabric (https://fabricmc.net/develop)
+minecraft = "1.21.11"
+yarn-mappings = "1.21.11+build.3"
+fabric-loader = "0.18.2"
+fabric-api = "0.140.0+1.21.11"
+
+# Plugins
+# Loom (https://github.com/FabricMC/fabric-loom)
+loom = "1.14-SNAPSHOT"
+
+# Mods
+# Baritone (https://github.com/MeteorDevelopment/baritone)
+baritone = "1.21.10-SNAPSHOT"
+# Sodium (https://github.com/CaffeineMC/sodium-fabric)
+sodium = "mc1.21.11-0.8.7-fabric"
+# Lithium (https://github.com/CaffeineMC/lithium-fabric)
+lithium = "mc1.21.11-0.21.3-fabric"
+# Iris (https://github.com/IrisShaders/Iris)
+iris = "1.10.2+1.21.11-fabric"
+# ModMenu (https://github.com/TerraformersMC/ModMenu)
+modmenu = "15.0.0"
+# Orbit (https://github.com/MeteorDevelopment/orbit)
+orbit = "0.2.4"
+# Starscript (https://github.com/MeteorDevelopment/starscript)
+# NOTE: pinned to the OLD coordinates/package (meteordevelopment:starscript, package
+# "meteordevelopment.starscript"). The shipped jar's decompiled imports use that package, and its
+# bundled META-INF/jars/starscript-0.2.2.jar is byte-identical to this exact artifact (verified
+# during analysis). The newer "org.meteordev:starscript:0.2.5" repackages to "org.meteordev.starscript"
+# and does not match what this client was actually built against.
+starscript = "0.2.2"
+# DiscordRPC (https://github.com/MeteorDevelopment/java-discord-rpc)
+discordipc = "1.1"
+# Reflections (https://github.com/ronmamo/reflections)
+reflections = "0.10.2"
+# Netty (https://github.com/netty/netty)
+netty = "4.2.7.Final"
+# ViaFabricPlus (https://github.com/ViaVersion/ViaFabricPlus)
+viafabricplus = "4.4.0"
+# WaybackAuthLib (https://github.com/FlorianMichael/WaybackAuthLib)
+waybackauthlib = "1.0.1"
+# MinecraftAuth (https://github.com/RaphiMC/MinecraftAuth)
+minecraftauth = "5.0.2"
+# Optional integration deps (source reconstruction): the decompiled source imports these but the
+# original build.gradle.kts is gone. Coordinates recovered from the live ecosystem and pinned to
+# what this client (MC 1.21.11, Meteor/Baritone 1.21.10) was actually built against.
+# nether-pathfinder: Baritone's native elytra pathfinder. Meteor baritone 1.21.10 bundles
+# nether-pathfinder-1.4.1.jar as a JIJ, but jar-in-jar isn't on the compile classpath, so it's
+# declared explicitly here (repo: https://babbaj.github.io/maven/, group dev.babbaj).
+nether-pathfinder = "1.4.1"
+# LambdaEvents: Lenni0451's event bus (the @EventHandler used by the Xaero chunk-sync shim). On
+# Maven Central. XaeroPlus 1.21.11 pins the same 2.4.2.
+lambdaevents = "2.4.2"
+# Xaero's Minimap / World Map + XaeroPlus, via the Modrinth maven (group maven.modrinth). Versions
+# are the Modrinth release version-numbers for MC 1.21.11 Fabric that XaeroPlus 2.37.0 builds on.
+xaeros-minimap = "fabric-1.21.11-26.6.0"
+xaeros-worldmap = "fabric-1.21.11-1.47.0"
+xaeroplus = "2.37.0+fabric-1.21.11"
+# Javassist (bundled in the shipped jar's META-INF/jars; used by the Reflections method scanner)
+javassist = "3.28.0-GA"
+# JOrbis / Tritonus-Share / VorbisSPI (bundled; javax.sound SPI providers for OGG Vorbis playback)
+jorbis = "0.0.17.4"
+tritonus-share = "0.3.7.4"
+vorbisspi = "1.0.3.3"
+
+[libraries]
+# Fabric base
+minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+yarn = { module = "net.fabricmc:yarn", version.ref = "yarn-mappings" }
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
+
+# Mods
+sodium = { module = "maven.modrinth:sodium", version.ref = "sodium" }
+lithium = { module = "maven.modrinth:lithium", version.ref = "lithium" }
+iris = { module = "maven.modrinth:iris", version.ref = "iris" }
+baritone = { module = "meteordevelopment:baritone", version.ref = "baritone" }
+modmenu = { module = "com.terraformersmc:modmenu", version.ref = "modmenu" }
+viafabricplus = { module = "com.viaversion:viafabricplus", version.ref = "viafabricplus" }
+viafabricplus-api = { module = "com.viaversion:viafabricplus-api", version.ref = "viafabricplus" }
+
+# Libraries
+orbit = { module = "meteordevelopment:orbit", version.ref = "orbit" }
+starscript = { module = "meteordevelopment:starscript", version.ref = "starscript" }
+discord-ipc = { module = "meteordevelopment:discord-ipc", version.ref = "discordipc" }
+reflections = { module = "org.reflections:reflections", version.ref = "reflections" }
+netty-handler-proxy = { module = "io.netty:netty-handler-proxy", version.ref = "netty" }
+netty-codec-socks = { module = "io.netty:netty-codec-socks", version.ref = "netty" }
+waybackauthlib = { module = "de.florianmichael:WaybackAuthLib", version.ref = "waybackauthlib" }
+minecraft-auth = { module = "net.raphimc:MinecraftAuth", version.ref = "minecraftauth" }
+nether-pathfinder = { module = "dev.babbaj:nether-pathfinder", version.ref = "nether-pathfinder" }
+lambdaevents = { module = "net.lenni0451:LambdaEvents", version.ref = "lambdaevents" }
+xaeros-minimap = { module = "maven.modrinth:xaeros-minimap", version.ref = "xaeros-minimap" }
+xaeros-worldmap = { module = "maven.modrinth:xaeros-world-map", version.ref = "xaeros-worldmap" }
+xaeroplus = { module = "maven.modrinth:xaeroplus", version.ref = "xaeroplus" }
+javassist = { module = "org.javassist:javassist", version.ref = "javassist" }
+jorbis = { module = "com.googlecode.soundlibs:jorbis", version.ref = "jorbis" }
+tritonus-share = { module = "com.googlecode.soundlibs:tritonus-share", version.ref = "tritonus-share" }
+vorbisspi = { module = "com.googlecode.soundlibs:vorbisspi", version.ref = "vorbisspi" }
+
+[plugins]
+fabric-loom = { id = "fabric-loom", version.ref = "loom" }
